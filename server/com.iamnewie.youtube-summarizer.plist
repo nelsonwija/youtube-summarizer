@@ -6,18 +6,18 @@
   <string>com.iamnewie.youtube-summarizer</string>
   <key>ProgramArguments</key>
   <array>
-    <string>/Users/user/Projects/youtube-summarizer/.venv/bin/python</string>
-    <string>/Users/user/Projects/youtube-summarizer/server.py</string>
+    <string>/Users/user/Projects/youtube-summarizer/server/.venv/bin/python</string>
+    <string>/Users/user/Projects/youtube-summarizer/server/server.py</string>
   </array>
   <key>WorkingDirectory</key>
-  <string>/Users/user/Projects/youtube-summarizer</string>
+  <string>/Users/user/Projects/youtube-summarizer/server</string>
   <key>RunAtLoad</key>
   <true/>
   <key>KeepAlive</key>
   <true/>
   <key>StandardOutPath</key>
-  <string>/Users/user/Projects/youtube-summarizer/server.log</string>
+  <string>/Users/user/Projects/youtube-summarizer/server/server.log</string>
   <key>StandardErrorPath</key>
-  <string>/Users/user/Projects/youtube-summarizer/server.log</string>
+  <string>/Users/user/Projects/youtube-summarizer/server/server.log</string>
 </dict>
 </plist>
