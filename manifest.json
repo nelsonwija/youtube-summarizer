@@ -1,0 +1,22 @@
+{
+  "manifest_version": 3,
+  "name": "YouTube Transcript Summarizer",
+  "version": "0.1.0",
+  "description": "Summarize the YouTube video you're watching by driving your logged-in Claude/ChatGPT tab.",
+  "action": { "default_popup": "popup.html" },
+  "background": { "service_worker": "background.js" },
+  "options_page": "options.html",
+  "permissions": ["tabs", "storage", "activeTab"],
+  "host_permissions": [
+    "https://www.youtube.com/*",
+    "https://chatgpt.com/*",
+    "https://chat.openai.com/*",
+    "http://localhost:8791/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": ["https://chatgpt.com/*", "https://chat.openai.com/*"],
+      "js": ["providers.js", "content/provider.js"]
+    }
+  ]
+}

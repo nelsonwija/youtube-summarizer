@@ -1,0 +1,60 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <style>
+      body {
+        width: 360px;
+        margin: 0;
+        font: 14px/1.45 system-ui, sans-serif;
+        color: #111;
+        background: #fff;
+      }
+      header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 10px 12px;
+        border-bottom: 1px solid #eee;
+      }
+      h1 { font-size: 13px; margin: 0; font-weight: 600; }
+      #gear { cursor: pointer; color: #666; text-decoration: none; font-size: 16px; }
+      main { padding: 12px; }
+      button {
+        width: 100%;
+        padding: 9px;
+        font: inherit;
+        font-weight: 600;
+        color: #fff;
+        background: #c15f3c;
+        border: 0;
+        border-radius: 6px;
+        cursor: pointer;
+      }
+      button:disabled { opacity: 0.6; cursor: default; }
+      #status { margin: 10px 0 0; color: #666; font-size: 13px; min-height: 18px; }
+      #status.err { color: #c0392b; }
+      #summary {
+        margin-top: 12px;
+        white-space: pre-wrap;
+        max-height: 360px;
+        overflow: auto;
+        font-size: 13px;
+      }
+      #summary:empty { display: none; }
+      .prov { color: #999; font-size: 11px; }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>YouTube Summarizer</h1>
+      <a id="gear" href="#" title="Options">⚙</a>
+    </header>
+    <main>
+      <button id="go">Summarize this video</button>
+      <p id="status"></p>
+      <div id="summary"></div>
+    </main>
+    <script src="popup.js"></script>
+  </body>
+</html>
