@@ -40,10 +40,12 @@ function setInput(el, text) {
 
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
-// Wait for a NEW assistant reply (count grew past prevCount) whose text has been
-// stable for stableMs and generation stopped. Watching text-stability (not just
-// the stop button) survives fast "OK" replies the button check would miss.
-function waitForNewReply(adapter, prevCount, stableMs = 1200, hardTimeout = 180000) {
+// Wait for a NEW assistant reply whose text has been stable for stableMs and
+// generation stopped. Watching text-stability (not just the stop button)
+// survives fast "OK" replies the button check would miss.
+// Keyed on the last node's IDENTITY, not the node count: ChatGPT unmounts older
+// turns in long threads, so a count-based check stops growing and hangs forever.
+function waitForNewReply(adapter, prevLast, stableMs = 1200, hardTimeout = 180000) {
   return new Promise((resolve, reject) => {
     const start = Date.now();
     let lastText = "";
@@ -51,9 +53,10 @@ function waitForNewReply(adapter, prevCount, stableMs = 1200, hardTimeout = 1800
 
     const tick = setInterval(() => {
       const res = document.querySelectorAll(adapter.responseSelector);
+      const cur = res[res.length - 1] || null;
       const generating = !!document.querySelector(adapter.stopSelector);
-      if (res.length > prevCount) {
-        const txt = res[res.length - 1].innerText;
+      if (cur && cur !== prevLast) {
+        const txt = cur.innerText;
         if (txt !== lastText) {
           lastText = txt;
           lastChange = Date.now();
@@ -71,22 +74,22 @@ function waitForNewReply(adapter, prevCount, stableMs = 1200, hardTimeout = 1800
   });
 }
 
-// Send each message into the same chat, in order. Returns the LAST reply.
-async function runPrompt(adapter, messages) {
-  let last = "";
-  for (const text of messages) {
-    const input = await waitFor(adapter.inputSelector);
-    const prevCount = document.querySelectorAll(adapter.responseSelector).length;
-    setInput(input, text);
+// Send ONE message into the chat and return its reply. The background worker
+// drives the loop — one short call per chunk keeps the MV3 service worker from
+// being killed mid-run for sitting in a single multi-minute event.
+async function runPrompt(adapter, text) {
+  const input = await waitFor(adapter.inputSelector);
+  const nodes = document.querySelectorAll(adapter.responseSelector);
+  const prevLast = nodes[nodes.length - 1] || null;
+  setInput(input, text);
 
-    const send = await waitFor(adapter.sendSelector);
-    await sleep(400); // let the UI enable the button after the input event
-    send.click();
+  const send = await waitFor(adapter.sendSelector);
+  await sleep(400); // let the UI enable the button after the input event
+  send.click();
 
-    last = await waitForNewReply(adapter, prevCount);
-  }
-  if (!last) throw new Error("Could not find the assistant reply.");
-  return last;
+  const reply = await waitForNewReply(adapter, prevLast);
+  if (!reply) throw new Error("Could not find the assistant reply.");
+  return reply;
 }
 
 chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
@@ -96,7 +99,7 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
     sendResponse({ ok: false, error: `Unknown provider ${msg.provider}` });
     return;
   }
-  runPrompt(adapter, msg.messages)
+  runPrompt(adapter, msg.text)
     .then(text => sendResponse({ ok: true, text }))
     .catch(err => sendResponse({ ok: false, error: String(err.message || err) }));
   return true; // async

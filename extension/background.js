@@ -120,14 +120,24 @@ async function summarize() {
   const messages = buildMessages(cfg.promptTemplate, title, transcript);
 
   const provTabId = await openProviderTab(adapter);
-  const r = await sendToTab(provTabId, {
-    type: "RUN_PROMPT",
-    provider: adapter.id,
-    messages
-  });
-  if (!r?.ok) throw new Error(r?.error || "Provider failed.");
 
-  return { summary: r.text, title, provider: adapter.label };
+  // Drive the loop here, one message per sendToTab call. Each call returns in
+  // ~a minute, which resets the service worker's idle timer — a single call
+  // spanning every chunk gets the worker killed around the 5-minute mark.
+  let last = "";
+  for (let i = 0; i < messages.length; i++) {
+    console.log(`[summarizer] sending part ${i + 1}/${messages.length}`);
+    const r = await sendToTab(provTabId, {
+      type: "RUN_PROMPT",
+      provider: adapter.id,
+      text: messages[i]
+    });
+    if (!r?.ok)
+      throw new Error(`Part ${i + 1}/${messages.length}: ${r?.error || "provider failed."}`);
+    last = r.text;
+  }
+
+  return { summary: last, title, provider: adapter.label };
 }
 
 chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
